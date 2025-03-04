@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Restic Backup - [% page_title %]</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #0078d7;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .logs {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Restic Backup - [% page_title %]</h1>
+    
+    [% IF message %]
+    <div class="[% message_type %]">
+        [% message %]
+    </div>
+    [% END %]
+    
+    [% IF logs %]
+    <h2>Logs</h2>
+    <div class="logs">
+        [% logs %]
+    </div>
+    [% END %]
+    
+    [% IF snapshots %]
+    <h2>Backup History</h2>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+        [% FOREACH snapshot IN snapshots %]
+        <tr>
+            <td>[% snapshot.id.substr(0, 8) %]</td>
+            <td>[% snapshot.time %]</td>
+            <td>
+                <a href="restic_backup_user.cgi?action=restore&snapshot=[% snapshot.id %]" class="button" onclick="return confirm('Are you sure you want to restore from this backup? This will overwrite your current account data.')">Restore</a>
+            </td>
+        </tr>
+        [% END %]
+    </table>
+    [% END %]
+    
+    <div style="margin-top: 20px;">
+        <a href="restic_backup_user.cgi" class="button">Back to Main</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WHM - Restic Backup Admin - [% page_title %]</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #0078d7;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .logs {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            color: green;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        form {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"], input[type="password"], select, input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Restic Backup Admin - [% page_title %]</h1>
+    
+    [% IF message %]
+    <div class="[% message_type %]">
+        [% message %]
+    </div>
+    [% END %]
+    
+    [% IF config_form %]
+    <div class="section">
+        <h2>Repository Configuration</h2>
+        <form method="post" action="restic_backup_admin.cgi">
+            <input type="hidden" name="action" value="save_config">
+            
+            <h3>Repository Settings</h3>
+            <p>
+                <label for="repository">Restic Repository:</label>
+                <input type="text" id="repository" name="repository" value="[% config.repository %]" placeholder="e.g., /backup/restic, sftp:user@host:/path, s3:s3.amazonaws.com/bucket_name">
+                <small>Examples: /backup/restic, sftp:user@host:/path, s3:s3.amazonaws.com/bucket_name</small>
+            </p>
+            
+            <p>
+                <label for="password">Repository Password:</label>
+                <input type="password" id="password" name="password" value="[% config.password %]" placeholder="Strong password for encryption">
+                <small>This password is used to encrypt all backups. Keep it safe!</small>
+            </p>
+            
+            <h3>Backup Schedule</h3>
+            <p>
+                <label for="schedule">Schedule:</label>
+                <select id="schedule" name="schedule">
+                    <option value="daily" [% IF config.schedule == 'daily' %]selected[% END %]>Daily</option>
+                    <option value="weekly" [% IF config.schedule == 'weekly' %]selected[% END %]>Weekly</option>
+                    <option value="monthly" [% IF config.schedule == 'monthly' %]selected[% END %]>Monthly</option>
+                </select>
+            </p>
+            
+            <h3>Retention Policy</h3>
+            <p>
+                <label for="retention_daily">Keep daily backups:</label>
+                <input type="number" id="retention_daily" name="retention_daily" min="1" max="90" value="[% config.retention.daily %]">
+                <small>Number of daily backups to keep</small>
+            </p>
+            
+            <p>
+                <label for="retention_weekly">Keep weekly backups:</label>
+                <input type="number" id="retention_weekly" name="retention_weekly" min="1" max="52" value="[% config.retention.weekly %]">
+                <small>Number of weekly backups to keep</small>
+            </p>
+            
+            <p>
+                <label for="retention_monthly">Keep monthly backups:</label>
+                <input type="number" id="retention_monthly" name="retention_monthly" min="1" max="24" value="[% config.retention.monthly %]">
+                <small>Number of monthly backups to keep</small>
+            </p>
+            
+            <p>
+                <input type="submit" value="Save Configuration">
+            </p>
+        </form>
+    </div>
+    [% END %]
+    
+    [% IF logs %]
+    <h2>Logs</h2>
+    <div class="logs">
+        [% logs %]
+    </div>
+    [% END %]
+    
+    [% IF snapshots %]
+    <h2>Snapshots for [% username %]</h2>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+        [% FOREACH snapshot IN snapshots %]
+        <tr>
+            <td>[% snapshot.id.substr(0, 8) %]</td>
+            <td>[% snapshot.time %]</td>
+            <td>
+                <a href="restic_backup_admin.cgi?action=restore_account&username=[% username %]&snapshot=[% snapshot.id %]" class="button" onclick="return confirm('Are you sure you want to restore this account from this backup? This will overwrite the current account data.')">Restore</a>
+            </td>
+        </tr>
+        [% END %]
+    </table>
+    [% END %]
+    
+    [% IF accounts %]
+    <h2>Account Management</h2>
+    <table>
+        <tr>
+            <th>Username</th>
+            <th>Actions</th>
+        </tr>
+        [% FOREACH account IN accounts %]
+        <tr>
+            <td>[% account %]</td>
+            <td>
+                <a href="restic_backup_admin.cgi?action=backup_account&username=[% account %]" class="button">Backup Now</a>
+                <a href="restic_backup_admin.cgi?action=list_snapshots&username=[% account %]" class="button">View Snapshots</a>
+                <a href="restic_backup_admin.cgi?action=show_logs&username=[% account %]" class="button">View Logs</a>
+            </td>
+        </tr>
+        [% END %]
+    </table>
+    [% END %]
+    
+    <div style="margin-top: 20px;">
+        <a href="restic_backup_admin.cgi" class="button">Back to Main</a>
+    </div>
+</body>
+</html>
