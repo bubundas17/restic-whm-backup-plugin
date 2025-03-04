@@ -33,6 +33,7 @@ WHM_ADDON_DIR="/usr/local/cpanel/whostmgr/docroot/cgi/addons/${PLUGIN_NAME}_plug
 CPANEL_PLUGIN_DIR="/usr/local/cpanel/base/frontend/paper_lantern/restic_backup"
 CONFIG_DIR="/var/cpanel/restic_backup"
 WHM_ACLS_DIR="/usr/local/cpanel/whostmgr/docroot/cgi"
+WHM_THEMES_DIR="/usr/local/cpanel/whostmgr/docroot/themes"
 
 # Check if the plugin is already installed
 if [ ! -d "$WHM_ADDON_DIR" ]; then
@@ -59,6 +60,14 @@ cp -f "$PLUGIN_DIR/restic_backup_admin.cgi" "$WHM_ADDON_DIR/"
 cp -f "$PLUGIN_DIR/scripts/"* "$WHM_ADDON_DIR/scripts/"
 cp -f "$PLUGIN_DIR/templates/"* "$WHM_ADDON_DIR/templates/" 2>/dev/null || mkdir -p "$WHM_ADDON_DIR/templates/"
 cp -f "$PLUGIN_DIR/ui/icons/"* "$WHM_ADDON_DIR/ui/icons/" 2>/dev/null || mkdir -p "$WHM_ADDON_DIR/ui/icons/"
+
+# Copy icon to WHM themes directory
+print_status "Copying icon to WHM themes directory..."
+for theme_dir in "$WHM_THEMES_DIR"/*; do
+    if [ -d "$theme_dir/icons" ]; then
+        cp -f "$PLUGIN_DIR/ui/icons/restic_backup.png" "$theme_dir/icons/" 2>/dev/null || true
+    fi
+done
 
 # Update cPanel plugin files
 print_status "Updating cPanel plugin files..."

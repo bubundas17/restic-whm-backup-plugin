@@ -1,4 +1,9 @@
-name=Restic
 service=whostmgr
-url=cgi/restic_backup_admin.cgi
+user=root
+url=/cgi/addons/restic_backup_plugin/restic_backup_admin.cgi
 acls=restic_backup_admin
+entryurl=addons/restic_backup_plugin/restic_backup_admin.cgi
+displayname=Restic Backup
+icon=restic_backup.png
+target=_self
+name=restic_backup
