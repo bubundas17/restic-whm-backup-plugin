@@ -67,8 +67,11 @@ rm -f "$CRON_FILE"
 
 # Unregister the plugin from WHM
 print_status "Unregistering plugin from WHM..."
-if [ -f "$WHM_ADDON_DIR/AppConfig" ]; then
+if [ -f "$WHM_ADDON_DIR/AppConfig" ] && [ -f "/usr/local/cpanel/bin/unregister_appconfig" ]; then
     /usr/local/cpanel/bin/unregister_appconfig "$WHM_ADDON_DIR/AppConfig"
+else
+    print_warning "unregister_appconfig command not found or AppConfig file missing."
+    print_warning "Plugin may not be properly unregistered from WHM."
 fi
 
 # Remove plugin directories
@@ -86,7 +89,12 @@ fi
 
 # Rebuild WHM theme
 print_status "Rebuilding WHM theme..."
-/usr/local/cpanel/bin/build_whm_themes
+if [ -f "/usr/local/cpanel/bin/build_whm_themes" ]; then
+    /usr/local/cpanel/bin/build_whm_themes
+else
+    print_warning "build_whm_themes command not found. WHM theme may not be properly updated."
+    print_warning "You may need to manually rebuild the WHM theme."
+fi
 
 print_status "Uninstallation completed successfully!"
 if [ "$KEEP_CONFIG" -eq 1 ]; then

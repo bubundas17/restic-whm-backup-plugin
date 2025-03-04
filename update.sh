@@ -55,7 +55,7 @@ cp -f "$PLUGIN_DIR/plugin.conf" "$WHM_ADDON_DIR/"
 cp -f "$PLUGIN_DIR/AppConfig" "$WHM_ADDON_DIR/"
 cp -f "$PLUGIN_DIR/restic_backup_admin.cgi" "$WHM_ADDON_DIR/"
 cp -f "$PLUGIN_DIR/scripts/"* "$WHM_ADDON_DIR/scripts/"
-cp -f "$PLUGIN_DIR/templates/"* "$WHM_ADDON_DIR/templates/"
+cp -f "$PLUGIN_DIR/templates/"* "$WHM_ADDON_DIR/templates/" 2>/dev/null || mkdir -p "$WHM_ADDON_DIR/templates/"
 cp -f "$PLUGIN_DIR/ui/icons/"* "$WHM_ADDON_DIR/ui/icons/" 2>/dev/null || mkdir -p "$WHM_ADDON_DIR/ui/icons/"
 
 # Update cPanel plugin files
@@ -84,11 +84,21 @@ chmod 644 "$CRON_FILE"
 
 # Re-register the plugin with WHM
 print_status "Re-registering plugin with WHM..."
-/usr/local/cpanel/bin/register_appconfig "$WHM_ADDON_DIR/AppConfig"
+if [ -f "/usr/local/cpanel/bin/register_appconfig" ]; then
+    /usr/local/cpanel/bin/register_appconfig "$WHM_ADDON_DIR/AppConfig"
+else
+    print_warning "register_appconfig command not found. Plugin may not be properly registered with WHM."
+    print_warning "You may need to manually register the plugin."
+fi
 
 # Rebuild WHM theme
 print_status "Rebuilding WHM theme..."
-/usr/local/cpanel/bin/build_whm_themes
+if [ -f "/usr/local/cpanel/bin/build_whm_themes" ]; then
+    /usr/local/cpanel/bin/build_whm_themes
+else
+    print_warning "build_whm_themes command not found. WHM theme may not be properly updated."
+    print_warning "You may need to manually rebuild the WHM theme."
+fi
 
 print_status "Update completed successfully!"
 print_status "Please visit WHM > Plugins > Restic Backup to verify the plugin is working correctly."
