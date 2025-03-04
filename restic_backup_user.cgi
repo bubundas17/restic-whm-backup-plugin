@@ -1,15 +1,12 @@
-#!/usr/bin/perl
-# Restic Backup User CGI Script
+#!/usr/local/cpanel/3rdparty/bin/perl
+#CPANEL:ACLS restic_backup_user
 
 use strict;
 use warnings;
-use CGI qw/:standard/;
-use CGI::Carp qw(fatalsToBrowser);
+use Cpanel::Template ();
+use CGI qw(:standard);
 use JSON;
 use File::Path qw(make_path);
-
-# Print HTTP headers
-print "Content-type: text/html\n\n";
 
 # Configuration paths
 my $config_dir = "/var/cpanel/restic_backup";
@@ -22,12 +19,13 @@ if (!-d $log_dir) {
 }
 
 # Initialize CGI
-my $cgi = CGI->new();
-my $action = $cgi->param('action') || 'show';
+my $query = new CGI;
+my $action = $query->param('action') || 'show';
 
 # Get current username
 my $username = $ENV{'REMOTE_USER'} || '';
 if (!$username) {
+    print "Content-type: text/html\r\n\r\n";
     print "<h1>Error</h1><p>Could not determine username</p>";
     exit 1;
 }
@@ -69,11 +67,11 @@ if ($action eq 'backup') {
     }
     
     # Redirect to show page
-    print $cgi->redirect('restic_backup_user.cgi?action=show_logs');
+    print $query->redirect('restic_backup_user.cgi?action=show_logs');
     exit;
 }
 elsif ($action eq 'restore') {
-    my $snapshot = $cgi->param('snapshot');
+    my $snapshot = $query->param('snapshot');
     if ($snapshot) {
         # Execute restore script
         my $result = system("/usr/local/cpanel/whostmgr/docroot/cgi/addons/restic_backup_plugin/scripts/restore.sh", $username, $snapshot);
@@ -86,7 +84,7 @@ elsif ($action eq 'restore') {
         }
         
         # Redirect to show page
-        print $cgi->redirect('restic_backup_user.cgi?action=show_logs');
+        print $query->redirect('restic_backup_user.cgi?action=show_logs');
         exit;
     }
 }
@@ -101,11 +99,8 @@ elsif ($action eq 'show_logs') {
     }
     
     # Display logs
-    print_header("Backup Logs");
-    print "<h2>Backup Logs for $username</h2>";
-    print "<pre>$logs</pre>";
-    print "<p><a href='restic_backup_user.cgi' class='button'>Back to Main</a></p>";
-    print_footer();
+    print "Content-type: text/html\r\n\r\n";
+    print_logs_page($logs);
     exit;
 }
 
@@ -124,64 +119,18 @@ if ($config->{repository} && $config->{password}) {
 }
 
 # Display user interface
-print_header("Restic Backup");
-
-print <<HTML;
-<div>
-    <a href="restic_backup_user.cgi?action=backup" class="button">Backup Now</a>
-    <a href="restic_backup_user.cgi?action=show_logs" class="button">View Logs</a>
-</div>
-
-<h2>Backup History</h2>
-HTML
-
-if (@$snapshots) {
-    print <<HTML;
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Date</th>
-        <th>Actions</th>
-    </tr>
-HTML
-
-    foreach my $snapshot (@$snapshots) {
-        print "<tr>";
-        print "<td>" . substr($snapshot->{id}, 0, 8) . "</td>";
-        print "<td>" . $snapshot->{time} . "</td>";
-        print "<td><a href='restic_backup_user.cgi?action=restore&snapshot=" . $snapshot->{id} . "' class='button' onclick='return confirm(\"Are you sure you want to restore from this backup? This will overwrite your current account data.\")'>Restore</a></td>";
-        print "</tr>";
-    }
-    
-    print "</table>";
-}
-else {
-    print "<p>No backups found for your account.</p>";
-}
-
-print <<HTML;
-<h2>About Restic Backup</h2>
-<p>
-    This tool allows you to backup and restore your cPanel account using Restic, 
-    a fast and secure backup program that provides efficient deduplication.
-</p>
-<p>
-    <strong>Backup Now</strong>: Creates a new backup of your account.<br>
-    <strong>Restore</strong>: Restores your account from a previous backup.<br>
-    <strong>View Logs</strong>: Shows the logs of backup and restore operations.
-</p>
-HTML
-
-print_footer();
+print "Content-type: text/html\r\n\r\n";
+print_main_page($snapshots);
 
 # Helper functions for HTML output
-sub print_header {
-    my $title = shift || "Restic Backup";
+sub print_main_page {
+    my ($snapshots) = @_;
+    
     print <<HTML;
 <!DOCTYPE html>
 <html>
 <head>
-    <title>$title</title>
+    <title>Restic Backup</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -228,12 +177,100 @@ sub print_header {
     </style>
 </head>
 <body>
-    <h1>$title</h1>
+    <h1>Restic Backup</h1>
+    
+    <div>
+        <a href="restic_backup_user.cgi?action=backup" class="button">Backup Now</a>
+        <a href="restic_backup_user.cgi?action=show_logs" class="button">View Logs</a>
+    </div>
+    
+    <h2>Backup History</h2>
+HTML
+
+    if (@$snapshots) {
+        print <<HTML;
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+HTML
+
+        foreach my $snapshot (@$snapshots) {
+            print "<tr>";
+            print "<td>" . substr($snapshot->{id}, 0, 8) . "</td>";
+            print "<td>" . $snapshot->{time} . "</td>";
+            print "<td><a href='restic_backup_user.cgi?action=restore&snapshot=" . $snapshot->{id} . "' class='button' onclick='return confirm(\"Are you sure you want to restore from this backup? This will overwrite your current account data.\")'>Restore</a></td>";
+            print "</tr>";
+        }
+        
+        print "</table>";
+    }
+    else {
+        print "<p>No backups found for your account.</p>";
+    }
+
+    print <<HTML;
+    <h2>About Restic Backup</h2>
+    <p>
+        This tool allows you to backup and restore your cPanel account using Restic, 
+        a fast and secure backup program that provides efficient deduplication.
+    </p>
+    <p>
+        <strong>Backup Now</strong>: Creates a new backup of your account.<br>
+        <strong>Restore</strong>: Restores your account from a previous backup.<br>
+        <strong>View Logs</strong>: Shows the logs of backup and restore operations.
+    </p>
+</body>
+</html>
 HTML
 }
 
-sub print_footer {
+sub print_logs_page {
+    my ($logs) = @_;
+    
     print <<HTML;
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backup Logs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #0078d7;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Backup Logs</h1>
+    
+    <h2>Backup Logs for $username</h2>
+    <pre>$logs</pre>
+    
+    <p><a href='restic_backup_user.cgi' class='button'>Back to Main</a></p>
 </body>
 </html>
 HTML
