@@ -32,6 +32,7 @@ WHM_ADDON_DIR="/usr/local/cpanel/whostmgr/docroot/cgi/addons/${PLUGIN_NAME}_plug
 CPANEL_PLUGIN_DIR="/usr/local/cpanel/base/frontend/paper_lantern/restic_backup"
 CONFIG_DIR="/var/cpanel/restic_backup"
 CRON_FILE="/etc/cron.d/restic_backup"
+WHM_ACLS_DIR="/usr/local/cpanel/whostmgr/docroot/cgi"
 
 # Ask for confirmation
 echo "This will uninstall the Restic Backup WHM Plugin."
@@ -64,6 +65,10 @@ rm -f "/usr/local/cpanel/base/frontend/paper_lantern/restic_backup.cgi"
 # Remove cron job
 print_status "Removing cron job..."
 rm -f "$CRON_FILE"
+
+# Remove acls file
+print_status "Removing ACLs file..."
+rm -f "$WHM_ACLS_DIR/acls"
 
 # Unregister the plugin from WHM
 print_status "Unregistering plugin from WHM..."

@@ -32,6 +32,7 @@ PLUGIN_DIR="$(pwd)"
 WHM_ADDON_DIR="/usr/local/cpanel/whostmgr/docroot/cgi/addons/${PLUGIN_NAME}_plugin"
 CPANEL_PLUGIN_DIR="/usr/local/cpanel/base/frontend/paper_lantern/restic_backup"
 CONFIG_DIR="/var/cpanel/restic_backup"
+WHM_ACLS_DIR="/usr/local/cpanel/whostmgr/docroot/cgi"
 
 # Check if the plugin is already installed
 if [ ! -d "$WHM_ADDON_DIR" ]; then
@@ -53,6 +54,7 @@ print_status "Updating plugin files..."
 print_status "Updating WHM addon files..."
 cp -f "$PLUGIN_DIR/plugin.conf" "$WHM_ADDON_DIR/"
 cp -f "$PLUGIN_DIR/AppConfig" "$WHM_ADDON_DIR/"
+cp -f "$PLUGIN_DIR/acls" "$WHM_ACLS_DIR/"
 cp -f "$PLUGIN_DIR/restic_backup_admin.cgi" "$WHM_ADDON_DIR/"
 cp -f "$PLUGIN_DIR/scripts/"* "$WHM_ADDON_DIR/scripts/"
 cp -f "$PLUGIN_DIR/templates/"* "$WHM_ADDON_DIR/templates/" 2>/dev/null || mkdir -p "$WHM_ADDON_DIR/templates/"
@@ -67,6 +69,7 @@ print_status "Setting file permissions..."
 chmod 700 "$WHM_ADDON_DIR/scripts/"*
 chmod 755 "$WHM_ADDON_DIR/restic_backup_admin.cgi"
 chmod 755 "$CPANEL_PLUGIN_DIR/restic_backup_user.cgi"
+chmod 644 "$WHM_ACLS_DIR/acls"
 
 # Update symlinks
 print_status "Updating symlinks..."

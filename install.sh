@@ -33,6 +33,7 @@ WHM_ADDON_DIR="/usr/local/cpanel/whostmgr/docroot/cgi/addons/${PLUGIN_NAME}_plug
 CPANEL_PLUGIN_DIR="/usr/local/cpanel/base/frontend/paper_lantern/restic_backup"
 CONFIG_DIR="/var/cpanel/restic_backup"
 CRON_FILE="/etc/cron.d/restic_backup"
+WHM_ACLS_DIR="/usr/local/cpanel/whostmgr/docroot/cgi"
 
 # Create directories
 print_status "Creating plugin directories..."
@@ -46,6 +47,7 @@ mkdir -p "$CONFIG_DIR/logs"
 print_status "Copying plugin files..."
 cp -f "$PLUGIN_DIR/plugin.conf" "$WHM_ADDON_DIR/"
 cp -f "$PLUGIN_DIR/AppConfig" "$WHM_ADDON_DIR/"
+cp -f "$PLUGIN_DIR/acls" "$WHM_ACLS_DIR/"
 cp -f "$PLUGIN_DIR/restic_backup_admin.cgi" "$WHM_ADDON_DIR/"
 cp -f "$PLUGIN_DIR/restic_backup_user.cgi" "$CPANEL_PLUGIN_DIR/"
 cp -f "$PLUGIN_DIR/scripts/"* "$WHM_ADDON_DIR/scripts/"
@@ -57,6 +59,7 @@ print_status "Setting file permissions..."
 chmod 700 "$WHM_ADDON_DIR/scripts/"*
 chmod 755 "$WHM_ADDON_DIR/restic_backup_admin.cgi"
 chmod 755 "$CPANEL_PLUGIN_DIR/restic_backup_user.cgi"
+chmod 644 "$WHM_ACLS_DIR/acls"
 chmod 700 "$CONFIG_DIR"
 chmod 700 "$CONFIG_DIR/logs"
 
