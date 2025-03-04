@@ -1,0 +1,24 @@
+<h2>Snapshots for [% data.username %]</h2>
+
+[% IF data.snapshots.size > 0 %]
+<table border="1" cellpadding="5" style="width: 100%;">
+    <tr>
+        <th>ID</th>
+        <th>Date</th>
+        <th>Actions</th>
+    </tr>
+    [% FOREACH snapshot IN data.snapshots %]
+    <tr>
+        <td>[% snapshot.id.substr(0, 8) %]</td>
+        <td>[% snapshot.time %]</td>
+        <td>
+            <a href="restic_backup_admin.cgi?action=restore_account&username=[% data.username %]&snapshot=[% snapshot.id %]">Restore</a>
+        </td>
+    </tr>
+    [% END %]
+</table>
+[% ELSE %]
+<p>No snapshots found for this user.</p>
+[% END %]
+
+<p><a href="restic_backup_admin.cgi">Back to Admin Panel</a></p>

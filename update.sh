@@ -34,6 +34,7 @@ CPANEL_PLUGIN_DIR="/usr/local/cpanel/base/frontend/paper_lantern/restic_backup"
 CONFIG_DIR="/var/cpanel/restic_backup"
 WHM_ACLS_DIR="/usr/local/cpanel/whostmgr/docroot/cgi"
 WHM_THEMES_DIR="/usr/local/cpanel/whostmgr/docroot/themes"
+WHM_TEMPLATES_DIR="/usr/local/cpanel/whostmgr/docroot/templates"
 
 # Check if the plugin is already installed
 if [ ! -d "$WHM_ADDON_DIR" ]; then
@@ -58,8 +59,12 @@ cp -f "$PLUGIN_DIR/AppConfig" "$WHM_ADDON_DIR/"
 cp -f "$PLUGIN_DIR/acls" "$WHM_ACLS_DIR/"
 cp -f "$PLUGIN_DIR/restic_backup_admin.cgi" "$WHM_ADDON_DIR/"
 cp -f "$PLUGIN_DIR/scripts/"* "$WHM_ADDON_DIR/scripts/"
-cp -f "$PLUGIN_DIR/templates/"* "$WHM_ADDON_DIR/templates/" 2>/dev/null || mkdir -p "$WHM_ADDON_DIR/templates/"
 cp -f "$PLUGIN_DIR/ui/icons/"* "$WHM_ADDON_DIR/ui/icons/" 2>/dev/null || mkdir -p "$WHM_ADDON_DIR/ui/icons/"
+
+# Update template files
+print_status "Updating template files..."
+mkdir -p "$WHM_TEMPLATES_DIR/restic_backup_plugin/templates"
+cp -f "$PLUGIN_DIR/templates/"*.tmpl "$WHM_TEMPLATES_DIR/restic_backup_plugin/templates/" 2>/dev/null || true
 
 # Copy icon to WHM themes directory
 print_status "Copying icon to WHM themes directory..."
@@ -79,6 +84,7 @@ chmod 700 "$WHM_ADDON_DIR/scripts/"*
 chmod 755 "$WHM_ADDON_DIR/restic_backup_admin.cgi"
 chmod 755 "$CPANEL_PLUGIN_DIR/restic_backup_user.cgi"
 chmod 644 "$WHM_ACLS_DIR/acls"
+chmod 644 "$WHM_TEMPLATES_DIR/restic_backup_plugin/templates/"*.tmpl
 
 # Update symlinks
 print_status "Updating symlinks..."

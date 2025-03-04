@@ -1,0 +1,73 @@
+<h2>Restic Backup Configuration</h2>
+
+<form method="post" action="restic_backup_admin.cgi">
+    <input type="hidden" name="action" value="save_config">
+    
+    <h3>Repository Settings</h3>
+    <p>
+        <label for="repository">Restic Repository:</label><br>
+        <input type="text" id="repository" name="repository" size="50" value="[% data.config.repository %]">
+        <br><small>Examples: /backup/restic, sftp:user@host:/path, s3:s3.amazonaws.com/bucket_name</small>
+    </p>
+    
+    <p>
+        <label for="password">Repository Password:</label><br>
+        <input type="password" id="password" name="password" size="30" value="[% data.config.password %]">
+    </p>
+    
+    <h3>Backup Schedule</h3>
+    <p>
+        <label for="schedule">Schedule:</label><br>
+        <select id="schedule" name="schedule">
+            <option value="daily" [% IF data.config.schedule == 'daily' %]selected[% END %]>Daily</option>
+            <option value="weekly" [% IF data.config.schedule == 'weekly' %]selected[% END %]>Weekly</option>
+            <option value="monthly" [% IF data.config.schedule == 'monthly' %]selected[% END %]>Monthly</option>
+        </select>
+    </p>
+    
+    <h3>Retention Policy</h3>
+    <p>
+        <label for="retention_daily">Keep daily backups:</label>
+        <input type="number" id="retention_daily" name="retention_daily" min="1" max="90" value="[% data.config.retention.daily %]"> days
+    </p>
+    
+    <p>
+        <label for="retention_weekly">Keep weekly backups:</label>
+        <input type="number" id="retention_weekly" name="retention_weekly" min="1" max="52" value="[% data.config.retention.weekly %]"> weeks
+    </p>
+    
+    <p>
+        <label for="retention_monthly">Keep monthly backups:</label>
+        <input type="number" id="retention_monthly" name="retention_monthly" min="1" max="24" value="[% data.config.retention.monthly %]"> months
+    </p>
+    
+    <p>
+        <input type="submit" value="Save Configuration">
+    </p>
+</form>
+
+<h2>Account Management</h2>
+
+<table border="1" cellpadding="5" style="width: 100%;">
+    <tr>
+        <th>Username</th>
+        <th>Actions</th>
+    </tr>
+    [% FOREACH username IN data.accounts.sort %]
+    <tr>
+        <td>[% username %]</td>
+        <td>
+            <a href="restic_backup_admin.cgi?action=backup_account&username=[% username %]">Backup Now</a> | 
+            <a href="restic_backup_admin.cgi?action=list_snapshots&username=[% username %]">View Snapshots</a> | 
+            <a href="restic_backup_admin.cgi?action=show_logs&username=[% username %]">View Logs</a>
+        </td>
+    </tr>
+    [% END %]
+</table>
+
+<script>
+// JavaScript for the admin interface
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any JavaScript functionality here
+});
+</script>

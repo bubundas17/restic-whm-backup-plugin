@@ -35,14 +35,15 @@ CONFIG_DIR="/var/cpanel/restic_backup"
 CRON_FILE="/etc/cron.d/restic_backup"
 WHM_ACLS_DIR="/usr/local/cpanel/whostmgr/docroot/cgi"
 WHM_THEMES_DIR="/usr/local/cpanel/whostmgr/docroot/themes"
+WHM_TEMPLATES_DIR="/usr/local/cpanel/whostmgr/docroot/templates"
 
 # Create directories
 print_status "Creating plugin directories..."
 mkdir -p "$WHM_ADDON_DIR/scripts"
-mkdir -p "$WHM_ADDON_DIR/templates"
 mkdir -p "$WHM_ADDON_DIR/ui/icons"
 mkdir -p "$CPANEL_PLUGIN_DIR"
 mkdir -p "$CONFIG_DIR/logs"
+mkdir -p "$WHM_TEMPLATES_DIR/restic_backup_plugin/templates"
 
 # Copy files
 print_status "Copying plugin files..."
@@ -52,7 +53,7 @@ cp -f "$PLUGIN_DIR/acls" "$WHM_ACLS_DIR/"
 cp -f "$PLUGIN_DIR/restic_backup_admin.cgi" "$WHM_ADDON_DIR/"
 cp -f "$PLUGIN_DIR/restic_backup_user.cgi" "$CPANEL_PLUGIN_DIR/"
 cp -f "$PLUGIN_DIR/scripts/"* "$WHM_ADDON_DIR/scripts/"
-cp -f "$PLUGIN_DIR/templates/"* "$WHM_ADDON_DIR/templates/" 2>/dev/null || mkdir -p "$WHM_ADDON_DIR/templates/"
+cp -f "$PLUGIN_DIR/templates/"*.tmpl "$WHM_TEMPLATES_DIR/restic_backup_plugin/templates/" 2>/dev/null || true
 cp -f "$PLUGIN_DIR/ui/icons/"* "$WHM_ADDON_DIR/ui/icons/" 2>/dev/null || true
 
 # Copy icon to WHM themes directory
@@ -69,6 +70,7 @@ chmod 700 "$WHM_ADDON_DIR/scripts/"*
 chmod 755 "$WHM_ADDON_DIR/restic_backup_admin.cgi"
 chmod 755 "$CPANEL_PLUGIN_DIR/restic_backup_user.cgi"
 chmod 644 "$WHM_ACLS_DIR/acls"
+chmod 644 "$WHM_TEMPLATES_DIR/restic_backup_plugin/templates/"*.tmpl
 chmod 700 "$CONFIG_DIR"
 chmod 700 "$CONFIG_DIR/logs"
 
