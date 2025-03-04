@@ -3,19 +3,13 @@
 
 use strict;
 use warnings;
-use CGI;
+use CGI qw/:standard/;
+use CGI::Carp qw(fatalsToBrowser);
 use JSON;
-use Cpanel::Template;
-use Whostmgr::ACLS ();
-use Whostmgr::HTMLInterface ();
 use File::Path qw(make_path);
 
-# Check if user has permission to access this page
-Whostmgr::ACLS::init_acls();
-if (!Whostmgr::ACLS::hasroot()) {
-    print "Access denied\n";
-    exit 1;
-}
+# Print HTTP headers
+print "Content-type: text/html\n\n";
 
 # Configuration paths
 my $config_dir = "/var/cpanel/restic_backup";
@@ -41,6 +35,15 @@ if (-f $config_file) {
     $config = decode_json($json) if $json;
 }
 
+# Set default values if not set
+$config->{repository} ||= '';
+$config->{password} ||= '';
+$config->{schedule} ||= 'daily';
+$config->{retention} ||= {};
+$config->{retention}{daily} ||= 7;
+$config->{retention}{weekly} ||= 4;
+$config->{retention}{monthly} ||= 6;
+
 # Handle form submissions
 if ($action eq 'save_config') {
     # Update configuration
@@ -62,7 +65,7 @@ if ($action eq 'save_config') {
     chmod 0600, $config_file;
     
     # Redirect to show page
-    print $cgi->redirect({-uri => 'restic_backup_admin.cgi'});
+    print $cgi->redirect('restic_backup_admin.cgi');
     exit;
 }
 elsif ($action eq 'backup_account') {
@@ -70,7 +73,7 @@ elsif ($action eq 'backup_account') {
     if ($username) {
         # Execute backup script
         system("/usr/local/cpanel/whostmgr/docroot/cgi/addons/restic_backup_plugin/scripts/backup.sh", $username);
-        print $cgi->redirect({-uri => 'restic_backup_admin.cgi?action=show_logs&username=' . $username});
+        print $cgi->redirect('restic_backup_admin.cgi?action=show_logs&username=' . $username);
         exit;
     }
 }
@@ -80,7 +83,7 @@ elsif ($action eq 'restore_account') {
     if ($username && $snapshot) {
         # Execute restore script
         system("/usr/local/cpanel/whostmgr/docroot/cgi/addons/restic_backup_plugin/scripts/restore.sh", $username, $snapshot);
-        print $cgi->redirect({-uri => 'restic_backup_admin.cgi?action=show_logs&username=' . $username});
+        print $cgi->redirect('restic_backup_admin.cgi?action=show_logs&username=' . $username);
         exit;
     }
 }
@@ -96,11 +99,11 @@ elsif ($action eq 'show_logs') {
     }
     
     # Display logs
-    Whostmgr::HTMLInterface::defheader("Restic Backup Logs for $username", "Restic Backup");
+    print_header("Restic Backup Logs for $username");
     print "<h2>Backup Logs for $username</h2>";
     print "<pre>$logs</pre>";
     print "<p><a href='restic_backup_admin.cgi'>Back to Admin Panel</a></p>";
-    Whostmgr::HTMLInterface::footer();
+    print_footer();
     exit;
 }
 elsif ($action eq 'list_snapshots') {
@@ -111,12 +114,17 @@ elsif ($action eq 'list_snapshots') {
         # Get snapshots for user
         my $output = `RESTIC_PASSWORD='$config->{password}' restic -r '$config->{repository}' snapshots --tag '$username' --json 2>/dev/null`;
         if ($output) {
-            $snapshots = decode_json($output);
+            eval {
+                $snapshots = decode_json($output);
+            };
+            if ($@) {
+                print "Error decoding JSON: $@";
+            }
         }
     }
     
     # Display snapshots
-    Whostmgr::HTMLInterface::defheader("Restic Snapshots for $username", "Restic Backup");
+    print_header("Restic Snapshots for $username");
     print "<h2>Snapshots for $username</h2>";
     
     if (@$snapshots) {
@@ -138,22 +146,24 @@ elsif ($action eq 'list_snapshots') {
     }
     
     print "<p><a href='restic_backup_admin.cgi'>Back to Admin Panel</a></p>";
-    Whostmgr::HTMLInterface::footer();
+    print_footer();
     exit;
 }
 
 # Get list of cPanel accounts
 my @accounts = ();
-open my $fh, '<', '/etc/trueuserdomains' or die "Cannot open trueuserdomains: $!";
-while (my $line = <$fh>) {
-    if ($line =~ /^([^:]+):\s*(\S+)/) {
-        push @accounts, $2;
+if (-f '/etc/trueuserdomains') {
+    open my $fh, '<', '/etc/trueuserdomains' or die "Cannot open trueuserdomains: $!";
+    while (my $line = <$fh>) {
+        if ($line =~ /^([^:]+):\s*(\S+)/) {
+            push @accounts, $2;
+        }
     }
+    close $fh;
 }
-close $fh;
 
 # Display admin interface
-Whostmgr::HTMLInterface::defheader("Restic Backup Admin", "Restic Backup");
+print_header("Restic Backup Admin");
 
 print <<HTML;
 <h2>Restic Backup Configuration</h2>
@@ -165,7 +175,7 @@ print <<HTML;
     <p>
         <label for="repository">Restic Repository:</label><br>
         <input type="text" id="repository" name="repository" size="50" value="$config->{repository}">
-        <br><small>Examples: /backup/restic, sftp:user@host:/path, s3:s3.amazonaws.com/bucket_name</small>
+        <br><small>Examples: /backup/restic, sftp:user\@host:/path, s3:s3.amazonaws.com/bucket_name</small>
     </p>
     
     <p>
@@ -235,4 +245,68 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 HTML
 
-Whostmgr::HTMLInterface::footer();
+print_footer();
+
+# Helper functions for HTML output
+sub print_header {
+    my $title = shift || "Restic Backup";
+    print <<HTML;
+<!DOCTYPE html>
+<html>
+<head>
+    <title>$title</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        input[type="text"], input[type="password"], input[type="number"], select {
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        input[type="submit"] {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>$title</h1>
+HTML
+}
+
+sub print_footer {
+    print <<HTML;
+</body>
+</html>
+HTML
+}
