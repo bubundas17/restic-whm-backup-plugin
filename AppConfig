@@ -6,8 +6,8 @@ PLUGIN_NAME="Restic Backup"
 PLUGIN_VERSION="1.0"
 
 # Required service and url specifications
-service="whostmgr"
-url="cgi/restic_backup_admin.cgi"
+service=whostmgr
+url=cgi/restic_backup_admin.cgi
 
 # Define the plugin's menu items in WHM
 add_item() {
