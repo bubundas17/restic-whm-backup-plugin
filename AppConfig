@@ -1,4 +1,4 @@
-name=Restic Backup
+name=Restic
 service=whostmgr
 url=cgi/restic_backup_admin.cgi
 acls=restic_backup_admin
